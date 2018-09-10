@@ -1,0 +1,86 @@
+#%RAML 1.0
+title: Example API
+version: v1
+baseUri: https://{host}:{port}/{environment}
+baseUriParameters:
+  host:
+    displayName: Domain name / ip address
+    type: string
+    default: localhost
+    description: Provide the IP of the server of its CDN.
+    example: 212.77.100.101
+  port:
+    displayName: Port
+    type: integer
+    default: 80
+    minimum: 80
+    maximum: 8888
+  environment:
+    (annotationTest):
+    displayName: Environment
+    enum: [Production, Staging, Development]
+    type: string
+    default: Development
+    pattern: (Production|Staging|Development)
+
+annotationTypes:
+  annotationTest: nil
+  deprecated: string
+  clearanceLevel:
+    properties:
+      level:
+        enum: [ low, medium, high ]
+        required: true
+      signature:
+        pattern: "\\d{3}-\\w{12}"
+        required: true
+      id:
+        type: integer
+        description: Id of the supervisor
+/test:
+  get:
+    queryParameters:
+      page:
+        description: Specify the page that you want to retrieve
+        type:        integer
+        required:    true
+        example:     1
+      per_page:
+        (deprecated): |
+          This value will be replaced with `pageLimit` query parameter
+        description: Specify the amount of items that will be retrieved per page
+        type:        integer
+        minimum:     10
+        maximum:     200
+        default:     30
+        example:     50
+        displayName: Per page
+      type:
+        description: Specify the type of the item.
+        type:        string
+        enum:       [type 1, type 2, type 3]
+        required: false
+        pattern: type\s\d
+        minLength: 5
+        maxLength: 6
+        default:     type 1
+        example:     type 2
+        displayName: Type
+        (clearanceLevel):
+          level: high
+          signature: 230-ghtwvfrs1itr
+          id: 123
+      other:
+        type: boolean
+        default: true
+        example: false
+        description: Either `true` or `fals`. You choose.
+      aDate:
+        displayName: A date
+        type: date-only
+      emptyDefault:
+        type: string
+        default: ""
+      zeroNumber:
+        type: number
+        default: 0

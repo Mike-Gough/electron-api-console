@@ -1,0 +1,74 @@
+#%RAML 1.0
+title: My without base URL
+
+/withoutDefaults/{pathParam}:
+  uriParameters:
+    pathParam:
+      type: string
+  get:
+    queryParameters:
+      qp1:
+        type: string
+        required: true
+      qp2:
+        type: string
+        required: true
+/withDefaults/{pathParam}:
+  uriParameters:
+    pathParam:
+      type: string
+  get:
+    queryParameters:
+      qp3:
+        type: string
+        required: true
+        default: value1
+      qp4:
+        type: string
+        required: true
+        default: value2
+/notRequired/{pathParam}:
+  uriParameters:
+    pathParam:
+      type: string
+  get:
+    queryParameters:
+      qp5:
+        type: string
+        required: false
+        default: value1
+      qp6:
+        type: string
+        required: false
+        default: value2
+/people:
+  get:
+    description: Lists people
+    queryParameters:
+      limit:
+        type: number
+        maximum: 100
+        minimum: 1
+        example: 50
+        default: 25
+        description: Limit number of people in the response
+        required: false
+      page:
+        type: number
+        required: false
+        default: 1
+        description: 1-based pagination for the results.
+  /{personId}:
+    uriParameters:
+      personId:
+        type: string
+        pattern: ^[0-9A-F]{8}-[0-9A-F]{4}-[5][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$
+        example: CA761232-ED42-51CE-BACD-00AA0057B223
+        description: ID of the person
+    get:
+      description: Get person description
+      queryParameters:
+        scope:
+          type: string
+          enum: [full, brief]
+          required: false

@@ -1,0 +1,238 @@
+<!--
+@license
+Copyright 2016 The Advanced REST client authors
+Licensed under the Apache License, Version 2.0 (the "License"); you may not
+use this file except in compliance with the License. You may obtain a copy of
+the License at
+http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+License for the specific language governing permissions and limitations under
+the License.
+-->
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../marked-element/marked-element.html">
+<link rel="import" href="../prism-element/prism-theme-default.html">
+<link rel="import" href="../prism-element/prism-highlighter.html">
+<link rel="import" href="../markdown-styles/markdown-styles.html">
+<link rel="import" href="../paper-tabs/paper-tabs.html">
+<link rel="import" href="../paper-tabs/paper-tab.html">
+<link rel="import" href="../iron-pages/iron-pages.html">
+<link rel="import" href="../iron-collapse/iron-collapse.html">
+<link rel="import" href="docs-parameters-behavior.html">
+<link rel="import" href="docs-parameters-table-shared-styles.html">
+<link rel="import" href="structure-display.html">
+<link rel="import" href="example-display.html">
+<!--
+`<docs-xml-parameters-table>` displays a documentation view for XML structured body.
+
+The element displays documentation for 3 cases:
+
+- Type and examples are defined
+- Type is defined
+- Example is defined
+
+### Example
+```
+<docs-xml-parameters-table
+  type="[[ramlXmlType]]"></docs-xml-parameters-table>
+```
+
+### Styling
+`<docs-json-parameters-table>` provides the following custom properties and mixins for styling:
+
+Custom property | Description | Default
+----------------|-------------|----------
+`--docs-xml-parameters-table` | Mixin applied to this elements | `{}`
+`--no-info-message` | A mixin applied to the "missing type" paragraph. | `{}`
+
+Use `paper-tabs`, `paper-tab` and `structure-display` mixins to style this element.
+
+@element docs-xml-parameters-table
+@demo demo/docs-body-parameters-table.html
+-->
+<dom-module id="docs-xml-parameters-table">
+  <template strip-whitespace>
+    <style include="prism-theme-default"></style>
+    <style include="markdown-styles"></style>
+    <style include="docs-parameters-table-shared-styles"></style>
+    <style>
+    :host {
+      display: block;
+    }
+
+    #content {
+      display: none;
+    }
+
+    :host([has-type]) #content {
+      display: block;
+    }
+
+    .no-type {
+      @apply --no-info-message;
+    }
+    </style>
+    <prism-highlighter></prism-highlighter>
+
+    <template is="dom-if" if="[[!hasType]]">
+      <p class="no-type">
+        This object doesn't have a type description.
+      </p>
+    </template>
+
+    <div id="content">
+      <template is="dom-if" if="[[schemaOnly]]" restamp>
+        <iron-collapse opened="[[structureDisplayOpened]]">
+          <div>
+            <pre is="structure-display" display="[[schemaDisplay]]" class="language-xml" data-type="xml" auto-hide></pre>
+          </div>
+        </iron-collapse>
+      </template>
+      <template is="dom-if" if="[[exampleOnly]]" restamp="true">
+        <iron-collapse opened="[[structureDisplayOpened]]">
+          <template is="dom-repeat" items="[[examples]]">
+            <div>
+              <pre is="structure-display" display="[[item]]" class="language-xml" data-type="xml" auto-hide></pre>
+            </div>
+          </template>
+        </iron-collapse>
+      </template>
+      <template is="dom-if" if="[[schemaAndExample]]" restamp>
+        <iron-collapse opened="[[structureDisplayOpened]]">
+          <div>
+            <paper-tabs class="schemas" selected="{{selectedSchemaPage}}">
+              <paper-tab>Schema</paper-tab>
+              <paper-tab>Examples</paper-tab>
+            </paper-tabs>
+            <iron-pages selected="[[selectedSchemaPage]]">
+              <div class="schema">
+                <h5 hidden$="[[_computeSchemaTypeHidden(type)]]">Schema: [[_computeSchemaLabel(type)]]</h5>
+                <pre is="structure-display" display="[[schemaDisplay]]" class="language-xml" data-type="xml" auto-hide></pre>
+              </div>
+              <div class="examples">
+                <template is="dom-repeat" items="[[examples]]">
+                  <example-display is-xml content="[[item]]"></example-display>
+                </template>
+              </div>
+            </iron-pages>
+          </div>
+        </iron-collapse>
+      </template>
+    </div>
+  </template>
+  <script>
+  Polymer({
+    is: 'docs-xml-parameters-table',
+
+    behaviors: [RamlBehaviors.DocsParametersBehavior],
+
+    properties: {
+      /**
+       * A RAML's type definition for the body payload.
+       */
+      type: Object,
+      // A schema to display. Computed value from provided `type` object.
+      schemaDisplay: {
+        type: String,
+        computed: '_computeDisplay(type.*)'
+      },
+      // True when either shema or example is available.
+      hasType: {
+        type: Boolean,
+        computed: '_computeHasType(hasSchema, hasExamples)',
+        value: false,
+        notify: true,
+        reflectToAttribute: true
+      },
+      /**
+       * Computed value, `true` when there's a schema information in passed
+       * body definition.
+       */
+      hasSchema: {
+        type: Boolean,
+        computed: '_computeHasSchema(schemaDisplay)',
+        value: false,
+        notify: true,
+        reflectToAttribute: true
+      },
+      /**
+       * A list of examples in the definition.
+       * This is a computed value for both `example` and `examples` properties.
+       */
+      examples: {
+        type: Array,
+        computed: '_computeExamples(type.*)'
+      },
+      // Selected page in the tabs (where examples exists for this page)
+      selectedSchemaPage: {
+        type: Number,
+        value: 0
+      },
+
+      // If true then the narrow layout is applied.
+      narrow: {
+        type: Boolean,
+        reflectToAttribute: true
+      },
+      /**
+       * If true then the collapse will be closed.
+       */
+      structureDisplayOpened: Boolean,
+      // Computed value, true when data contains example only
+      exampleOnly: {
+        type: Boolean,
+        computed: '_computeExampleOnly(hasSchema, hasExamples)'
+      },
+      // Computed value, true when data contains xml schema only
+      schemaOnly: {
+        type: Boolean,
+        computed: '_computeShemaOnly(hasSchema, hasExamples)'
+      },
+      // Computed value, true when data contains example and schema information
+      schemaAndExample: {
+        type: Boolean,
+        computed: '_computeShemaAndExample(hasSchema, hasExamples)'
+      }
+    },
+    // Computed boolean value if the `type` object has XML relevant information.
+    _computeHasSchema: function(display) {
+      return !!display;
+    },
+    // Computes the schema content to display.
+    _computeDisplay: function(record) {
+      var object = record.base;
+      if (!object) {
+        return undefined;
+      }
+      if (object.type === 'xml') {
+        return object.content;
+      }
+      if (object.schema && object.schemaContent) {
+        return object.schemaContent;
+      }
+      if (object.type && typeof object.type === 'string') {
+        return object.type;
+      }
+      return undefined;
+    },
+
+    _computeHasType: function(hasSchema, hasExamples) {
+      return hasSchema || hasExamples;
+    },
+
+    _computeExampleOnly: function(hasSchema, hasExamples) {
+      return !hasSchema && hasExamples;
+    },
+
+    _computeShemaOnly: function(hasSchema, hasExamples) {
+      return hasSchema && !hasExamples;
+    },
+
+    _computeShemaAndExample: function(hasSchema, hasExamples) {
+      return hasSchema && hasExamples;
+    }
+  });
+  </script>
+</dom-module>

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>api-console</title>
+    <link rel="import" href="bower_components/api-console/api-console.html">
+  </head>
+  <body>
+    <body>
+      <api-console raml="api.json"></api-console>
+    </body>
+    <script>
+      // You can also require other files to run in this process
+      require('./renderer.js')
+
+      var console = document.querySelector('api-console');
+      console.narrow = true;
+      console.appendHeaders = 'xX-CID: 1234';
+    </script>
+  </body>
+</html>
