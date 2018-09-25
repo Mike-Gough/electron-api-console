@@ -1,0 +1,25 @@
+{
+  "name": "electron-api-console",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "dependencies": {
+    "npm": "^6.4.1"
+  },
+  "devDependencies": {
+    "electron": "^3.0.0"
+  },
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "electron",
+    "api",
+    "console",
+    "api-console",
+    "RAML"
+  ],
+  "author": "Michael Gough",
+  "license": "ISC"
+}
